@@ -111,6 +111,27 @@ contributors — not individually confirmed — are the reduced universe size (3
 vs. 100 per group) weakening the exposure signal, and the SIC proxy used in
 place of GICS sector labels, both already listed as deviations below.
 
+A third, final check (component diagnostic, not a full run) refit MINGLE once
+on the most recent 504-day window of the 81-asset realised universe and
+inspected `Psi` and the eigenspectra of `Sigma_R` and `Sigma_S` directly:
+`Psi` ranges from 7.9e-6 to 7.6e-4 (median 1.7e-4), i.e. its floor is only
+about 22x below the median idiosyncratic variance, not pathologically close
+to zero, and `kappa(Sigma_R)=55.2` vs `kappa(Sigma_S)=360.9` (ratio 6.5x) on
+this single window — consistent with, not contradicting, the 5.34x mean
+ratio from the full run, so the gap is not caused by a numerically unstable
+`Psi` floor or a scale bug in the condition-number formula (Sec. 4, "Output").
+`kappa(Sigma_R)` is capped near the paper's `k=6` factor rank plus the `Psi`
+floor and is structurally near-independent of the asset count `p`, whereas
+`kappa(Sigma_S)` of a `p x p` sample covariance from `T=504` observations
+grows with the ratio `p/T` (more top eigenvalues from noise compressed near
+zero as `p` grows towards `T`): at `p=81` this ratio is `0.16`, far below the
+paper's `p=300`, `0.60`. A larger, paper-sized universe would therefore be
+expected to leave `kappa(Sigma_R)` roughly unchanged while increasing
+`kappa(Sigma_S)` substantially, pushing the ratio towards the paper's
+reported two orders of magnitude; this was not run at `p=300` given the
+download-time budget below, so it remains the leading explanation rather
+than a confirmed one. No further hypotheses were tested for this experiment.
+
 ## Experiment 3 — Portfolio Performance Backtest
 
 Command: `python -m exp.exp3_portfolio_backtest` — saves

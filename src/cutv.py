@@ -5,9 +5,9 @@ an "information-theoretic criterion" for eigenvector selection to reference
 [11] (Dionysiou et al., "Adaptive Spectral Graph Partitioning for Portfolio
 Optimisation", ICASSP 2026), which is not reproduced in this paper and whose
 full selection rule is not available here. This module implements a custom
-approximation (Context7 found no portfolio-clustering library offering this
-exact recursive-eigenvector-selection spectral cut; networkx/scipy provide
-only generic spectral clustering, not this selection rule): at each recursive
+approximation (no portfolio-clustering library offers this exact
+recursive-eigenvector-selection spectral cut; networkx/scipy provide only
+generic spectral clustering, not this selection rule): at each recursive
 split, it builds the graph Laplacian, examines the smallest
 ``config.CUTV_CANDIDATE_EIGENVECTORS`` non-trivial eigenvectors, and selects
 the one whose sign-based bipartition minimises the normalised cut
