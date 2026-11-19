@@ -247,7 +247,7 @@ def run(full: bool) -> dict:
     fig, axes = plt.subplots(1, len(config.ABLATION_SNR_DB), figsize=(15, 5), sharey=True)
     for ax, snr_db in zip(axes, config.ABLATION_SNR_DB):
         variant_sharpes = sharpes[snr_db]
-        ax.boxplot([variant_sharpes[name] for name in VARIANT_NAMES], labels=VARIANT_NAMES)
+        ax.boxplot([variant_sharpes[name] for name in VARIANT_NAMES], tick_labels=VARIANT_NAMES)
         ax.set_title(f"SNR = {snr_db} dB")
         ax.tick_params(axis="x", rotation=30)
     axes[0].set_ylabel("Sharpe ratio")
