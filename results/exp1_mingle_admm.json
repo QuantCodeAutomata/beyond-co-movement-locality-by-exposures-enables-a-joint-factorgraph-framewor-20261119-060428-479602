@@ -1,0 +1,22 @@
+{
+  "universe_size_per_group": 30,
+  "n_assets": 81,
+  "n_days_window": 504,
+  "rebalance_date": "2019-01-31",
+  "k_factors": 6,
+  "n_restarts": 1,
+  "n_iter": 100,
+  "converged": false,
+  "fit_seconds": 1.1124544143676758,
+  "objective_initial": 7645.063027010956,
+  "objective_final": 235.69036969933882,
+  "primal_residual_final": 0.6346375884357129,
+  "W_symmetry_max_abs_error": 0.0,
+  "W_min_entry": 0.0,
+  "W_max_diag_abs": 0.0,
+  "W_density_offdiag": 0.2345679012345679,
+  "laplacian_min_eigenvalue": -2.881155637084758e-16,
+  "condition_number_Sigma_R": 81.07710454844451,
+  "condition_number_Sigma_S": 382.6835075380951,
+  "condition_number_ratio_S_over_R": 4.719994746598743
+}

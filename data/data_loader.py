@@ -208,10 +208,21 @@ def load_ohlcv(
 def load_close_panel(
     tickers: list[str], start_date: str, end_date: str, use_cache: bool = True
 ) -> pd.DataFrame:
-    """Wide panel of dividend-adjusted close prices, index=date, columns=ticker."""
+    """Wide panel of dividend-adjusted close prices, index=date, columns=ticker.
+
+    Non-positive close prices are data errors (never a valid dividend-adjusted
+    price) and are treated as missing before forward-filling short gaps.
+    Tickers that still carry missing values after the fill (sparse/anomalous
+    series, e.g. thinly-traded ADRs) are dropped from the panel and reported,
+    since the factor-graph fit requires a complete rectangular return matrix.
+    """
     bars, _ = load_ohlcv(tickers, start_date, end_date, use_cache=use_cache)
     panel = bars.pivot(index="date", columns="ticker", values="close").sort_index()
+    panel = panel.where(panel > 0)
     panel = panel.ffill(limit=5)
+    bad_cols = panel.columns[panel.isna().any()]
+    if len(bad_cols) > 0:
+        panel = panel.drop(columns=bad_cols)
     return panel
 
 

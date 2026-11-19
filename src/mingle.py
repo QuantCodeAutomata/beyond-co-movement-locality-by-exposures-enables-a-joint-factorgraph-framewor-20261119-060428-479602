@@ -314,6 +314,42 @@ def fit_mingle(
     )
 
 
+def fit_mingle_best_of(
+    X: np.ndarray,
+    n_restarts: int = config.N_RESTARTS,
+    seed: int = config.RANDOM_SEED,
+    **kwargs,
+) -> MingleResult:
+    """Run ``fit_mingle`` from ``n_restarts`` initialisations and keep the
+    lowest-objective stationary point (Remark 1: the MINGLE objective is
+    non-convex and ADMM is not guaranteed to reach a global minimum;
+    "standard practice: run multiple initialisations and select the solution
+    with lowest objective value").
+
+    The first restart uses the deterministic weighted-SVD / RBF
+    initialisation (Eq. 7-8); subsequent restarts perturb the initial
+    exposures with small Gaussian noise before the same ADMM iterations,
+    since the paper does not specify how alternative initialisations are
+    generated.
+    """
+    rng = np.random.default_rng(seed)
+    best_result: MingleResult | None = None
+    best_objective = np.inf
+    for restart in range(max(1, n_restarts)):
+        if restart == 0:
+            X_init = X
+        else:
+            noise_scale = 1e-3 * np.std(X)
+            X_init = X + noise_scale * rng.standard_normal(X.shape)
+        result = fit_mingle(X_init, **kwargs)
+        final_objective = result.objective_history[-1] if result.objective_history else np.inf
+        if final_objective < best_objective:
+            best_objective = final_objective
+            best_result = result
+    assert best_result is not None
+    return best_result
+
+
 def factor_induced_covariance(
     B: np.ndarray, F: np.ndarray, X: np.ndarray, Omega_diag: np.ndarray | None = None
 ) -> np.ndarray:
