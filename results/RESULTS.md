@@ -92,8 +92,21 @@ restarts, degrading `B` and hence `Sigma_R` — was tested on a 30-asset slice
 seeds): the Adaptive-CutV allocation Sharpe ratio with 1 restart (median
 0.801, std 0.107) is statistically indistinguishable from 5 restarts (median
 0.793, std 0.097), so the number of restarts used in the full runs (1) is not
-the cause either. The cause of the reversal on the real, noisy 81-asset
-covariances was not isolated further within the available time. Likely
+the cause either. A re-reading of `src/cutv.py` end to end against its own
+documented selection rule (edge weights `|Sigma_ij|`, smallest
+`CUTV_CANDIDATE_EIGENVECTORS` non-trivial Laplacian eigenvectors, tie-broken
+by normalised cut) found no coding defect relative to that specification.
+The most likely structural explanation is that `Sigma_R = B Cov(F) B^T +
+Psi` has off-diagonal rank at most `k = 6` by construction, giving it up to
+six competing "factor" eigen-directions along which a good normalised cut
+can legitimately occur, whereas the dense, noisy off-diagonal of `Sigma_S`
+has no such competing low-rank modes and defaults to the Fiedler cut more
+often; this effect would plausibly be weaker on the paper's full 300-name,
+three-index universe, whose GICS-labelled sectors and US/Japan/Europe
+structure would be expected to produce a single dominant Fiedler-aligned
+split. This explanation is not independently confirmed on the paper's full
+universe and real GICS labels, so the reversal is reported as not reproduced
+with a plausible but unconfirmed structural cause, not a proven one. Likely
 contributors — not individually confirmed — are the reduced universe size (30
 vs. 100 per group) weakening the exposure signal, and the SIC proxy used in
 place of GICS sector labels, both already listed as deviations below.
