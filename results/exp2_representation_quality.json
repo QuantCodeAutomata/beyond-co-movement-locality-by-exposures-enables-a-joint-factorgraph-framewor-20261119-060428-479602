@@ -1,5 +1,5 @@
 {
-  "mean_temporal_nmi": 0.69604071455724,
+  "mean_temporal_nmi": 0.6641914968429489,
   "n_transitions": 86,
   "gics_alignment": {
     "calm": {
@@ -21,10 +21,10 @@
   "mean_kappa_R": 100.76294002721801,
   "mean_kappa_S": 538.5272537525407,
   "mean_ratio_S_over_R": 5.344497228912476,
-  "fiedler_frequency_R": 0.3183408295852074,
-  "fiedler_frequency_S": 0.3638180909545227,
-  "fiedler_frequency_ratio": 0.875,
-  "first_cut_fiedler_frequency_R": 0.3218390804597701,
+  "fiedler_frequency_R": 0.5827086456771614,
+  "fiedler_frequency_S": 0.38830584707646176,
+  "fiedler_frequency_ratio": 1.5006435006435006,
+  "first_cut_fiedler_frequency_R": 0.47126436781609193,
   "universe_size_per_group": 30,
   "n_assets": 81,
   "n_rebalances": 87,

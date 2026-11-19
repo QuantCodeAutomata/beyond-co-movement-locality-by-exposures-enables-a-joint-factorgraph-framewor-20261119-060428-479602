@@ -148,35 +148,59 @@ costs shown below (all five cost levels 0/5/10/20/50 bps are in
 | Equal Weight | 15.5% | 13.65% | 0.780 | 0.821 | - | 0.428 |
 | MVO | 5.86% | 6.35% | 0.364 | 0.540 | - | 0.224 |
 | HRP | 10.7% | 10.96% | 0.613 | 0.758 | - | 0.363 |
-| CutV, Sigma_S | 17.3% | 14.60% | 0.860 | 0.868 | - | 0.481 |
-| CutV, Sigma_R (ours) | 19.7% | 14.99% | 0.994 | 0.877 | 0.580 | 0.450 |
-| Contagion Cut (ours) | 21.0% | 15.13% | 1.07 | 0.888 | 0.611 | 0.468 |
+| CutV, Sigma_S | 17.3% | 12.21% | 0.860 | 0.758 | - | 0.375 |
+| CutV, Sigma_R (ours) | 19.7% | 10.15% | 0.994 | 0.678 | 0.580 | 0.316 |
+| Contagion Cut (ours) | 21.0% | 9.78% | 1.07 | 0.655 | 0.611 | 0.309 |
 
 Verdicts: Equal Weight, HRP (CAGR within 10% of the paper, same sign and
 ranking) — reproduced. MVO CAGR reproduced; MVO Sharpe differs by 48% —
 partially reproduced. CutV Sigma_S, CutV Sigma_R and Contagion Cut CAGR and
-Sharpe differ from the paper by 11-28% — partially reproduced (same sign,
-same ranking, magnitude below the paper).
+Sharpe differ from the paper by 29-53% — not reproduced in magnitude, and (see
+below) also not reproduced in ranking.
 
 Qualitative claims:
-- Monotonic improvement CutV Sigma_S → CutV Sigma_R → Contagion Cut: **holds**
-  for both CAGR (14.60% → 14.99% → 15.13%) and Sharpe (0.868 → 0.877 → 0.888)
-  — reproduced.
+- Monotonic improvement CutV Sigma_S → CutV Sigma_R → Contagion Cut: **does
+  not hold** — not reproduced. CAGR runs 12.21% → 10.15% → 9.78% and Sharpe
+  0.758 → 0.678 → 0.655, i.e. monotonically *decreasing* rather than
+  increasing. This numbers update follows a fix to `src/cutv.py`'s
+  bipartition rule (it previously thresholded the selected eigenvector at its
+  own median instead of at zero, which forces a size-balanced split on every
+  cut regardless of the eigenvector's actual sign pattern and silently
+  discards the sign-based Fiedler-cut convention; confirmed in
+  `tests/test_cutv.py::test_adaptive_cutv_recovers_block_structure`, which
+  only passes with a sign threshold on a noiseless synthetic block graph).
+  After the fix, Experiment 2's Fiedler-selection-frequency ranking moved in
+  the paper's direction (Sigma_R now more Fiedler-frequent than Sigma_S, see
+  Experiment 2), but Experiment 3's CAGR/Sharpe ranking across CutV
+  Sigma_S/Sigma_R/Contagion Cut reversed instead of improving. The call sites
+  in `exp/exp3_portfolio_backtest.py` (covariance-based `is_graph=False` for
+  all three CutV variants, graph-based `contagion_cut_weights` using the same
+  `labels_R` as `CutV, Sigma_R`) were re-checked line by line against the
+  signatures in `src/cutv.py` and match the paper's description (Sec. 4,
+  "CutV, Σ̂_R" clusters on the covariance, "Contagion Cut" reweights the same
+  clusters by inverse within-cluster graph degree); no call-site mismatch was
+  found. The reversal is therefore attributed to the realised 81-asset,
+  SIC-sector universe producing exposure-based clusters whose intra-cluster
+  graph degree ordering does not track risk diversification the way it does
+  on the paper's 300-name, three-index universe — this explanation was not
+  independently confirmed by a run at the paper's universe size, so the cause
+  is reported as not identified with confidence.
 - MVO and HRP underperform Equal Weight (Sharpe 0.540 and 0.758 vs. 0.821):
   **holds** — reproduced.
 - Regime-conditional Sharpe, Calm (paper: Contagion 3.32, CutV Sigma_R 3.36,
-  "≈3.3"): run gives Contagion 3.46, CutV Sigma_R 3.60 — reproduced (within
+  "≈3.3"): run gives Contagion 3.13, CutV Sigma_R 3.28 — reproduced (within
   10%, same sign).
 - Regime-conditional Sharpe, Elevated (paper "≈0.7-0.8"): run gives Contagion
-  0.31, CutV Sigma_R 0.21 — not reproduced (correct sign, magnitude far
+  -0.04, CutV Sigma_R -0.07 — not reproduced (sign flipped and magnitude far
   below the paper's range).
 - Regime-conditional Sharpe, Crisis, "Contagion Cut has the least negative
   Sharpe" (paper: Contagion -2.98, the best of the nine): run gives Contagion
-  -2.29, but CutV Sigma_S is least negative at -2.15, not Contagion — **does
-  not hold** — not reproduced. The cause was not isolated within the available
-  time; it is consistent with the smaller, higher-turnover 81-asset universe
-  giving fewer crisis-regime trading days (10 of 87 rebalancing windows) per
-  Table/Fig. 6 proportions than the paper's 300-asset universe.
+  -2.30, but Equal Weight and HRP are less negative (-2.22) — **does not
+  hold** — not reproduced. As with the monotonicity claim above, the cause
+  was not isolated within the available time; it is consistent with the
+  smaller, higher-turnover 81-asset universe giving fewer crisis-regime
+  trading days (10 of 87 rebalancing windows) than the paper's 300-asset
+  universe.
 
 ## Experiment 4 — Ablation Study Under Synthetic Noise
 
@@ -189,29 +213,38 @@ draws per SNR level (paper: 100; see "Deviations from the paper").
 
 | SNR (dB) | Proposed median (paper) | Proposed median (run) | Sequential (paper / run) | No-LR (paper / run) | No-Decorr (paper / run) |
 |---|---|---|---|---|---|
-| 40 | 1.03 | 0.669 | 1.02 / 0.745 | 0.96 / 0.724 | 0.93 / 0.758 |
-| 20 | 1.01 | 0.659 | 1.00 / 0.692 | 0.94 / 0.698 | 0.93 / 0.752 |
-| 10 | 0.96 | 0.678 | 0.94 / 0.694 | 0.92 / 0.698 | 0.92 / 0.668 |
+| 40 | 1.03 | 0.732 | 1.02 / 0.808 | 0.96 / 0.766 | 0.93 / 0.726 |
+| 20 | 1.01 | 0.696 | 1.00 / 0.709 | 0.94 / 0.683 | 0.93 / 0.755 |
+| 10 | 0.96 | 0.745 | 0.94 / 0.753 | 0.92 / 0.679 | 0.92 / 0.753 |
 
 Paired t-tests (Proposed vs. each variant, 20 seeds): **not reproduced**. The
 paper reports the Proposed variant significantly outperforming No-LR and
 No-Decorr at every noise level (p < 0.001) and outperforming Sequential at 40
-dB only. In this run, the Proposed variant's median Sharpe is *below* every
-ablated variant at every noise level, and none of the differences reach
-p < 0.001 (smallest p-value 0.0030, 40 dB Proposed vs. No-Decorr). The sign of
-the comparison is reversed relative to the paper.
+dB only. In this run, the Proposed variant's median Sharpe is close to or
+below the Sequential and No-Decorr variants at every noise level, and no
+comparison reaches p < 0.001 (smallest p-value 0.14, Proposed vs. No-LR at 20
+dB; all other p-values 0.32-0.97, Sec. 5/Fig. 7). The direction and
+significance of the paper's claims are not reproduced at this reduced scale
+(single rebalancing window, 20 of the paper's 100 noise seeds; see
+"Deviations from the paper").
 
 This is a material, unresolved discrepancy. Localization performed within the
 available time: (1) `tests/test_mingle_variants.py` confirms the No-LR and
 Sequential variants run end-to-end and return covariance matrices of the
 correct shape and symmetry on synthetic fixtures, ruling out a shape/API
-mismatch; (2) a single rebalancing window and 20 (not 100) noise seeds were
-used, so the paired comparisons are noisier than the paper's; this was not
-sufficient to explain a full sign reversal. The remaining candidate causes —
-an error in the "Proposed" ADMM's robustness to additive Gaussian noise
-relative to the simpler PCA-based "Sequential" baseline at small sample sizes,
-or a scale mismatch between the noise calibration (Sec. 4, "SNR_dB =
-10log10(P_signal/P_noise)") and the per-element signal power used here — were
+mismatch; (2) the fixed `src/cutv.py` sign-threshold bipartition rule (see
+Experiment 3) was re-run here, which changed the absolute medians from the
+previous run but did not restore the paper's ranking or significance; (3) a
+single rebalancing window and 20 (not 100) noise seeds were used, so the
+paired comparisons are noisier than the paper's — with 20 seeds, only effect
+sizes near Cohen's d >= 0.8 would reach p < 0.001, and the observed
+differences between variants are an order of magnitude smaller than that.
+This sample-size gap is consistent with, but does not by itself prove, the
+absence of a coding defect. The remaining candidate cause — an error in the
+"Proposed" ADMM's robustness to additive Gaussian noise relative to the
+simpler PCA-based "Sequential" baseline at small sample sizes, or a scale
+mismatch between the noise calibration (Sec. 4, "SNR_dB =
+10log10(P_signal/P_noise)") and the per-element signal power used here — was
 not isolated further within the available time; the cause is recorded as not
 identified.
 
