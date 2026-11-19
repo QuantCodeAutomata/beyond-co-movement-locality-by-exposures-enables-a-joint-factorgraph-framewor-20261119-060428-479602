@@ -44,7 +44,17 @@ def _best_bipartition(adjacency: np.ndarray, indices: np.ndarray) -> tuple[np.nd
     """Split the subgraph on ``indices`` using the eigenvector (among the
     smallest ``CUTV_CANDIDATE_EIGENVECTORS`` non-trivial ones) whose sign
     pattern minimises the normalised cut; returns (labels over ``indices``,
-    selected eigenvalue index, 1-based, Fiedler = 1)."""
+    selected eigenvalue index, 1-based, Fiedler = 1).
+
+    The bipartition follows the standard Fiedler-vector sign convention
+    (component >= 0 vs < 0), not a forced median split: the latter would
+    always cut the group into two equal halves regardless of the graph's
+    actual structure, which would make every recursive cluster size
+    data-independent and erase exactly the exposure-locality signal the
+    partition is meant to detect. A degenerate eigenvector that never
+    changes sign (every component on the same side) falls back to a median
+    split so the recursion can still proceed.
+    """
     sub = adjacency[np.ix_(indices, indices)]
     degree = np.diag(sub.sum(axis=1))
     laplacian = degree - sub
@@ -54,7 +64,9 @@ def _best_bipartition(adjacency: np.ndarray, indices: np.ndarray) -> tuple[np.nd
     best_cut, best_labels, best_index = np.inf, None, 1
     for eig_idx in range(1, n_candidates):  # skip the trivial constant eigenvector (index 0)
         vec = eigenvectors[:, eig_idx]
-        labels = (vec >= np.median(vec)).astype(int)
+        labels = (vec >= 0).astype(int)
+        if labels.min() == labels.max():  # degenerate: every component on one side
+            labels = (vec >= np.median(vec)).astype(int)
         cut_value = _normalised_cut(sub, labels)
         if cut_value < best_cut:
             best_cut, best_labels, best_index = cut_value, labels, eig_idx
