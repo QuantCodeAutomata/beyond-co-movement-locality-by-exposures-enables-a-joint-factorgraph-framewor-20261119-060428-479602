@@ -85,12 +85,18 @@ Fiedler-optimal, not less) was checked with a component test
 confirming that `src/cutv.py`'s eigenvector-selection criterion recovers the
 correct block partition and selects low-index eigenvectors on a noiseless
 4-block synthetic graph, so the recursive selection rule itself is not
-miscoded for the textbook case; the cause of the
-reversal on the real, noisy 81-asset covariances was not isolated further
-within the available time. Likely contributors — not individually confirmed —
-are the reduced universe size (30 vs. 100 per group) weakening the exposure
-signal, and the SIC proxy used in place of GICS sector labels, both already
-listed as deviations below.
+miscoded for the textbook case. A second hypothesis — that the ADMM in
+`fit_mingle_best_of` converges to a poor local stationary point for lack of
+restarts, degrading `B` and hence `Sigma_R` — was tested on a 30-asset slice
+(SNR = 20 dB noise-corrupted log-returns, Sec. 5/Fig. 7 ablation setup, 10
+seeds): the Adaptive-CutV allocation Sharpe ratio with 1 restart (median
+0.801, std 0.107) is statistically indistinguishable from 5 restarts (median
+0.793, std 0.097), so the number of restarts used in the full runs (1) is not
+the cause either. The cause of the reversal on the real, noisy 81-asset
+covariances was not isolated further within the available time. Likely
+contributors — not individually confirmed — are the reduced universe size (30
+vs. 100 per group) weakening the exposure signal, and the SIC proxy used in
+place of GICS sector labels, both already listed as deviations below.
 
 ## Experiment 3 — Portfolio Performance Backtest
 
